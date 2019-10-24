@@ -4,15 +4,19 @@ services:
   osis:
     ports:
       - "8000:8000"
+
     volumes:
       - ./osis:/app
+
+    networks:
+      - core
 
     build: ./osis/
 
     env_file:
       - ./osis/.env
 
-    depends_on:
+    links:
       - db-osis
       - rabbit
       - redis
@@ -27,8 +31,11 @@ services:
     env_file:
       - ./osis-portal/.env
 
-    depends_on:
-      - db-osis-portal
+    networks:
+      - portal
+
+    links:
+      - db-osis-portal:db-osis-portal
       - rabbit
       - redis
 
@@ -41,6 +48,8 @@ services:
       - "5432:5432"
     volumes:
       - ./pgdata:/var/lib/postgresql/data/
+    networks:
+      - core
 
   db-osis-portal:
     image: postgres:9.6
@@ -52,8 +61,24 @@ services:
     volumes:
       - ./pgdata-portal:/var/lib/postgresql/data/
 
+    networks:
+      - portal
+
   rabbit:
     image: rabbitmq
+    networks:
+      - core
+      - portal
 
   redis:
     image: redis
+    networks:
+      - core
+      - portal
+
+networks:
+  portal:
+    driver: bridge
+
+  core:
+    driver: bridge
